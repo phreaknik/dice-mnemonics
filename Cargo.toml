@@ -1,0 +1,8 @@
+[package]
+authors = ["John Boyd <johnboydiv@gmail.com>"]
+name = "mnemonic-dice"
+description = "Generate a mnemonic phrase using dice rolls."
+version = "0.1.0"
+
+[dependencies]
+clap = "2.32"
