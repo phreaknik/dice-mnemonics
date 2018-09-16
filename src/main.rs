@@ -36,6 +36,7 @@ fn main() {
         .collect();
 
     // Get dice rolls from user and return dictionary word
+     println!("Enter 'q' or 'quit' to exit");
      println!("Enter up to 4 dice rolls (without spaces), to generate a seed word:");
     loop {
         let input = prompt_user("> ").unwrap_or_else(|err| {
