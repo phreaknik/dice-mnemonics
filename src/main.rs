@@ -7,6 +7,8 @@ use std::io::{self, Write, BufRead, BufReader};
 use std::process;
 use std::vec::Vec;
 
+const DICE_SIDES: usize = 6;
+
 fn main() {
     let arg_matches = App::new(crate_name!())
         .version(crate_version!())
@@ -34,10 +36,25 @@ fn main() {
         .lines()
         .map(|l| l.expect("Could not parse line"))
         .collect();
+    let dict_size = dictionary.len() - 1;
+
+    // Calculate minimum # of rolls to preserve the most entropy
+    let mut rem = dict_size;
+    let mut min_rolls = 0;
+    loop {
+        rem = rem / DICE_SIDES;
+        
+        if rem <= 0 {
+            break;
+        }
+
+        min_rolls = min_rolls + 1;
+    }
 
     // Get dice rolls from user and return dictionary word
      println!("Enter 'q' or 'quit' to exit");
-     println!("Enter up to 4 dice rolls (without spaces), to generate a seed word:");
+     println!("Enter dice rolls (without spaces), to generate a seed words.");
+     println!("Use at least {} rolls to preserve {}% entropy.", min_rolls, 100 * DICE_SIDES.pow(min_rolls) / dict_size);
     loop {
         let input = prompt_user("> ").unwrap_or_else(|err| {
             println!("error: {}", err);
@@ -51,17 +68,21 @@ fn main() {
             _ => (),
         }
 
-        // Loop for each roll to calculate large number
+        // Make sure we have enough rolls to preserve maximum entropy
         let rolls: Vec<char> = input.chars().collect();
+        if (rolls.len() as u32) < min_rolls {
+            println!("error: roll at least {} dice to preserve entropy", min_rolls);
+            continue;
+        }
+
+        // Loop for each roll to calculate large number
         let mut num = 0;
         let mut count = 0;
-        let dict_size = dictionary.len() - 1;
-        let dice_sides: usize = 6;
         for x in rolls {
             count = count + 1;
 
             // Calculate scale factor for this roll
-            let scale_factor = dict_size / dice_sides.pow(count);
+            let scale_factor = dict_size / DICE_SIDES.pow(count);
 
             // Break if we have seen enough rolls
             if scale_factor <= 0 {
@@ -72,7 +93,7 @@ fn main() {
             let roll: usize = x.to_string().parse().expect("not a number");
 
             // Check this is a valid roll
-            if roll > dice_sides || roll < 1 {
+            if roll > DICE_SIDES || roll < 1 {
                 println!("Error: invalid die roll: {}. Must be a number between 1-6", roll);
                 break;
             }
