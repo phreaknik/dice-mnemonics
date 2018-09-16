@@ -3,7 +3,7 @@ extern crate clap;
 
 use clap::{App, Arg};
 use std::fs::File;
-use std::io::{self, Write, BufRead, BufReader};
+use std::io::{self, BufRead, BufReader, Write};
 use std::process;
 use std::vec::Vec;
 
@@ -43,7 +43,7 @@ fn main() {
     let mut min_rolls = 0;
     loop {
         rem = rem / DICE_SIDES;
-        
+
         if rem <= 0 {
             break;
         }
@@ -52,15 +52,19 @@ fn main() {
     }
 
     // Get dice rolls from user and return dictionary word
-     println!("Enter 'q' or 'quit' to exit");
-     println!("Enter dice rolls (without spaces), to generate a seed words.");
-     println!("Use at least {} rolls to preserve {}% entropy.", min_rolls, 100 * DICE_SIDES.pow(min_rolls) / dict_size);
+    println!("Enter 'q' or 'quit' to exit");
+    println!("Enter dice rolls (without spaces), to generate a seed words.");
+    println!(
+        "Use at least {} rolls to preserve {}% entropy.",
+        min_rolls,
+        100 * DICE_SIDES.pow(min_rolls) / dict_size
+    );
     loop {
-        let input = prompt_user("> ").unwrap_or_else(|err| {
-            println!("error: {}", err);
-            process::exit(1);
-            })
-            .to_string();
+        let input = prompt_user("> ")
+            .unwrap_or_else(|err| {
+                println!("error: {}", err);
+                process::exit(1);
+            }).to_string();
 
         // Check for quit signal
         match input.as_ref() {
@@ -71,7 +75,10 @@ fn main() {
         // Make sure we have enough rolls to preserve maximum entropy
         let rolls: Vec<char> = input.chars().collect();
         if (rolls.len() as u32) < min_rolls {
-            println!("error: roll at least {} dice to preserve entropy", min_rolls);
+            println!(
+                "error: roll at least {} dice to preserve entropy",
+                min_rolls
+            );
             continue;
         }
 
@@ -94,10 +101,13 @@ fn main() {
 
             // Check this is a valid roll
             if roll > DICE_SIDES || roll < 1 {
-                println!("Error: invalid die roll: {}. Must be a number between 1-6", roll);
+                println!(
+                    "Error: invalid die roll: {}. Must be a number between 1-6",
+                    roll
+                );
                 break;
             }
-            
+
             // Calculate next part of number
             num = num + (roll - 1) * scale_factor;
         }
@@ -137,4 +147,3 @@ fn prompt_user(msg: &str) -> (Result<String, String>) {
         return Ok(s);
     }
 }
-
