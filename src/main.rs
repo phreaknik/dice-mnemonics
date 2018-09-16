@@ -56,12 +56,15 @@ fn main() {
         let mut num = 0;
         let mut count = 0;
         let dict_size = dictionary.len() - 1;
-        let dice_sides = 6;
+        let dice_sides: usize = 6;
         for x in rolls {
             count = count + 1;
 
+            // Calculate scale factor for this roll
+            let scale_factor = dict_size / dice_sides.pow(count);
+
             // Break if we have seen enough rolls
-            if count > 4 {
+            if scale_factor <= 0 {
                 break;
             }
 
@@ -75,7 +78,7 @@ fn main() {
             }
             
             // Calculate next part of number
-            num = num + (roll - 1) * (dict_size / dice_sides.pow(count));
+            num = num + (roll - 1) * scale_factor;
         }
 
         // Print dictionary word corresponding to the large number
