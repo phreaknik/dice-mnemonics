@@ -22,8 +22,7 @@ fn main() {
                 .help("What type of mnemonic phrase are you generating? Eg. 'monero-english'")
                 .takes_value(true)
                 .required(true),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("dictionary")
                 .short("d")
                 .long("dictionary")
@@ -31,23 +30,21 @@ fn main() {
                 .help("Path to dictionary file.")
                 .takes_value(true),
         ).get_matches();
-    
+
     // Which type of mnemonic phrase are we generating?
     match arg_matches.value_of("type").unwrap() {
         "monero-english" => {
-                if let Some(dict_file) = arg_matches.value_of("dictionary") {
-                    generate_mnemonic_monero(&dict_file);
-                } else {
-                    generate_mnemonic_monero("dictionaries/monero-english.txt");
-                }
-                
-            },
-        _ => { 
-                println!("error: unable to determine mnemonic dictionary to use.");
-                process::exit(1);
+            if let Some(dict_file) = arg_matches.value_of("dictionary") {
+                generate_mnemonic_monero(&dict_file);
+            } else {
+                generate_mnemonic_monero("dictionaries/monero-english.txt");
             }
+        }
+        _ => {
+            println!("error: unable to determine mnemonic dictionary to use.");
+            process::exit(1);
+        }
     }
-
 }
 
 fn generate_mnemonic_monero(dict_file: &str) -> () {
