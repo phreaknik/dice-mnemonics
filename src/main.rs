@@ -15,24 +15,50 @@ fn main() {
         .author(crate_authors!())
         .about(crate_description!())
         .arg(
+            Arg::with_name("type")
+                .short("t")
+                .long("type")
+                .value_name("MNEMONIC_TYPE")
+                .help("What type of mnemonic phrase are you generating? Eg. 'monero-english'")
+                .takes_value(true)
+                .required(true),
+        )
+        .arg(
             Arg::with_name("dictionary")
                 .short("d")
                 .long("dictionary")
                 .value_name("DICT_FILE")
                 .help("Path to dictionary file.")
-                .takes_value(true)
-                .required(true),
+                .takes_value(true),
         ).get_matches();
+    
+    // Which type of mnemonic phrase are we generating?
+    match arg_matches.value_of("type").unwrap() {
+        "monero-english" => {
+                if let Some(dict_file) = arg_matches.value_of("dictionary") {
+                    generate_mnemonic_monero(&dict_file);
+                } else {
+                    generate_mnemonic_monero("dictionaries/monero-english.txt");
+                }
+                
+            },
+        _ => { 
+                println!("error: unable to determine mnemonic dictionary to use.");
+                process::exit(1);
+            }
+    }
 
+}
+
+fn generate_mnemonic_monero(dict_file: &str) -> () {
     // Open the dictionary file for reading
-    let path = arg_matches.value_of("dictionary").unwrap();
-    let dict_file = File::open(path).unwrap_or_else(|err| {
+    let f = File::open(dict_file).unwrap_or_else(|err| {
         println!("error: {}", err);
         process::exit(1);
     });
 
     // Build dictionary from each line of dictionary file
-    let dictionary: Vec<String> = BufReader::new(dict_file)
+    let dictionary: Vec<String> = BufReader::new(f)
         .lines()
         .map(|l| l.expect("Could not parse line"))
         .collect();
