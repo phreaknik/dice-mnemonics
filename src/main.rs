@@ -82,8 +82,9 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
         min_rolls,
         100 * DICE_SIDES.pow(min_rolls) / dict_size
     );
-    loop {
-        let input = prompt_user("> ")
+    for i in 1..24 {
+        print!("({}/25) ", i);
+        let input = prompt_user("")
             .unwrap_or_else(|err| {
                 println!("error: {}", err);
                 process::exit(1);
