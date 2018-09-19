@@ -92,33 +92,28 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
     // Get first 24 words
     let mut current_word = 1;
     loop {
-        print!("({}/24)\t", current_word);
-        let input = prompt_user("")
-            .unwrap_or_else(|err| {
-                println!("error: {}", err);
-                process::exit(1);
-            }).to_string();
+        // Prompt user to enter dice rolls
+        let mut rolls: Vec<usize> = Vec::new();
+        print!("({}/24)\t", current_word); 
+        if let Ok(input) = prompt_user("") {
+            match &input as &str {
+                // Detect quit command
+                "q" | "Q" => process::exit(0),
 
-        // Check for quit signal
-        match input.as_ref() {
-            "q" | "Q" | "quit" => process::exit(0),
-            _ => (),
-        }
-
-        // Make sure we have enough rolls to preserve maximum entropy
-        let rolls: Vec<char> = input.chars().collect();
-        if rolls.len() < min_rolls {
-            println!(
-                "error: roll at least {} dice to preserve entropy",
-                min_rolls
-            );
+                // Convert input to vector of numbers
+                _ => rolls = input.chars().map(|c| {
+                            c.to_string().parse().expect("not a number")
+                            }).collect(),
+            }
+        } else {
+            println!("error: invalid input");
             continue;
         }
 
         // Loop for each roll to calculate large number
         let mut num = 0;
         let mut count = 1;
-        for x in rolls {
+        for roll in rolls {
             // Calculate scale factor for this roll
             let scale_factor = DICT_SIZE / DICE_SIDES.pow(count);
 
@@ -127,14 +122,11 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
                 break;
             }
 
-            // Convert roll from char to number
-            let roll: usize = x.to_string().parse().expect("not a number");
-
             // Check this is a valid roll
             if roll > DICE_SIDES || roll < 1 {
                 println!(
-                    "Error: invalid die roll: {}. Must be a number between 1-6",
-                    roll
+                    "error: invalid die roll: {}. Rolls must be between between 1-{}",
+                    roll, DICE_SIDES
                 );
                 break;
             }
@@ -149,6 +141,10 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
         // Make sure all 4 rolls were summed
         if count < 5 {
             // Skip this word, since less than 4 dice were used
+            println!(
+                "error: roll at least {} valid dice to preserve entropy",
+                min_rolls
+            );
             continue;
         }
 
