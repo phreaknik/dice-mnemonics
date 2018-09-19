@@ -1,13 +1,15 @@
 #[macro_use]
 extern crate clap;
+extern crate crc;
 
 use clap::{App, Arg};
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use std::process;
 use std::vec::Vec;
+use crc::{crc32, Hasher32};
 
-const DICE_SIDES: usize = 6;
+const DICE_SIDES: u32 = 6;
 
 fn main() {
     let arg_matches = App::new(crate_name!())
@@ -48,6 +50,10 @@ fn main() {
 }
 
 fn generate_mnemonic_monero(dict_file: &str) -> () {
+    const DICT_SIZE: u32 = 1626;
+    let mut word_indices: Vec<u32> = Vec::new();
+    let mut trimmed_words = String::new();
+
     // Open the dictionary file for reading
     let f = File::open(dict_file).unwrap_or_else(|err| {
         println!("error: {}", err);
@@ -59,19 +65,19 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
         .lines()
         .map(|l| l.expect("Could not parse line"))
         .collect();
-    let dict_size = dictionary.len() - 1;
+    assert_eq!(dictionary.len(), 1626);
 
     // Calculate minimum # of rolls to preserve the most entropy
-    let mut rem = dict_size;
+    let mut rem = DICT_SIZE;
     let mut min_rolls = 0;
     loop {
-        rem = rem / DICE_SIDES;
+        rem = rem / DICE_SIDES as u32;
 
         if rem <= 0 {
             break;
         }
 
-        min_rolls = min_rolls + 1;
+        min_rolls += 1;
     }
 
     // Get dice rolls from user and return dictionary word
@@ -80,10 +86,10 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
     println!(
         "Use at least {} rolls to preserve {}% entropy.",
         min_rolls,
-        100 * DICE_SIDES.pow(min_rolls) / dict_size
+        100 * DICE_SIDES.pow(min_rolls) / DICT_SIZE
     );
     for i in 1..24 {
-        print!("({}/25) ", i);
+        print!("({}/25)\t", i);
         let input = prompt_user("")
             .unwrap_or_else(|err| {
                 println!("error: {}", err);
@@ -110,10 +116,10 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
         let mut num = 0;
         let mut count = 0;
         for x in rolls {
-            count = count + 1;
+            count += 1;
 
             // Calculate scale factor for this roll
-            let scale_factor = dict_size / DICE_SIDES.pow(count);
+            let scale_factor = DICT_SIZE / DICE_SIDES.pow(count);
 
             // Break if we have seen enough rolls
             if scale_factor <= 0 {
@@ -121,7 +127,7 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
             }
 
             // Convert roll from char to number
-            let roll: usize = x.to_string().parse().expect("not a number");
+            let roll: u32 = x.to_string().parse().expect("not a number");
 
             // Check this is a valid roll
             if roll > DICE_SIDES || roll < 1 {
@@ -133,15 +139,21 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
             }
 
             // Calculate next part of number
-            num = num + (roll - 1) * scale_factor;
+            num += (roll - 1) * scale_factor;
         }
 
-        // Print dictionary word corresponding to the large number
-        if num > dict_size {
-            println!("error: dictionary overflow");
-            process::exit(1);
-        }
-        println!("{}", dictionary[num]);
+        // Look up dictionary word and add to phrase
+        word_indices.push(num);
+        trimmed_words.push_str(&dictionary[num as usize][0..3]);
+    }
+
+    // Calculate checksum word
+    let checksum = crc32::checksum_ieee(trimmed_words.as_bytes()) % word_indices.len() as u32;
+    word_indices.push(checksum);
+
+    // Print phrase
+    for w in word_indices {
+        println!("{}", dictionary[w as usize]);
     }
 }
 
