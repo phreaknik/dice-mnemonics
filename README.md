@@ -5,7 +5,7 @@ This program is written in Rust and assumes you have Rust tools installed. If no
 
 ## Build instructions
 ```
-git@github.com:phreaknik/dice-mnemonics.git
+git clone git@github.com:phreaknik/dice-mnemonics.git
 cd dice-mnemonics
 cargo build
 ```
