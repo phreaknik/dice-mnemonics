@@ -7,7 +7,7 @@ use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use std::process;
 use std::vec::Vec;
-use crc::{crc32, Hasher32};
+use crc::crc32;
 
 const DICE_SIDES: u32 = 6;
 
@@ -88,8 +88,11 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
         min_rolls,
         100 * DICE_SIDES.pow(min_rolls) / DICT_SIZE
     );
-    for i in 1..24 {
-        print!("({}/25)\t", i);
+
+    // Get first 24 words
+    let mut current_word = 1;
+    loop {
+        print!("({}/24)\t", current_word);
         let input = prompt_user("")
             .unwrap_or_else(|err| {
                 println!("error: {}", err);
@@ -98,7 +101,7 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
 
         // Check for quit signal
         match input.as_ref() {
-            "q" | "Q" | "quit" => break,
+            "q" | "Q" | "quit" => process::exit(0),
             _ => (),
         }
 
@@ -114,10 +117,8 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
 
         // Loop for each roll to calculate large number
         let mut num = 0;
-        let mut count = 0;
+        let mut count = 1;
         for x in rolls {
-            count += 1;
-
             // Calculate scale factor for this roll
             let scale_factor = DICT_SIZE / DICE_SIDES.pow(count);
 
@@ -140,11 +141,26 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
 
             // Calculate next part of number
             num += (roll - 1) * scale_factor;
+            
+            // Increment counter
+            count += 1;
+        }
+
+        // Make sure all 4 rolls were summed
+        if count < 5 {
+            // Skip this word, since less than 4 dice were used
+            continue;
         }
 
         // Look up dictionary word and add to phrase
         word_indices.push(num);
         trimmed_words.push_str(&dictionary[num as usize][0..3]);
+
+        // Check if we have 24 words yet
+        current_word += 1;
+        if current_word > 24 {
+            break;
+        }
     }
 
     // Calculate checksum word
@@ -152,8 +168,10 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
     word_indices.push(checksum);
 
     // Print phrase
+    let mut idx = 1;
     for w in word_indices {
-        println!("{}", dictionary[w as usize]);
+        println!("{}:\t{}", idx, dictionary[w as usize]);
+        idx += 1;
     }
 }
 
