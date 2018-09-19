@@ -163,8 +163,9 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
     }
 
     // Calculate checksum word
-    let checksum = (crc32::checksum_ieee(trimmed_words.as_bytes()) as usize) % word_indices.len();
-    word_indices.push(checksum);
+    let checksum = crc32::checksum_ieee(trimmed_words.as_bytes()) as usize;
+    let checkword_idx = word_indices[checksum % word_indices.len()];
+    word_indices.push(checkword_idx);
 
     // Print phrase
     let mut idx = 1;
