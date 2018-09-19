@@ -3,11 +3,11 @@ extern crate clap;
 extern crate crc;
 
 use clap::{App, Arg};
+use crc::crc32;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use std::process;
 use std::vec::Vec;
-use crc::crc32;
 
 const DICE_SIDES: usize = 6;
 
@@ -94,16 +94,19 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
     loop {
         // Prompt user to enter dice rolls
         let mut rolls: Vec<usize> = Vec::new();
-        print!("({}/24)\t", current_word); 
+        print!("({}/24)\t", current_word);
         if let Ok(input) = prompt_user("") {
             match &input as &str {
                 // Detect quit command
                 "q" | "Q" => process::exit(0),
 
                 // Convert input to vector of numbers
-                _ => rolls = input.chars().map(|c| {
-                            c.to_string().parse().expect("not a number")
-                            }).collect(),
+                _ => {
+                    rolls = input
+                        .chars()
+                        .map(|c| c.to_string().parse().expect("not a number"))
+                        .collect()
+                }
             }
         } else {
             println!("error: invalid input");
@@ -133,7 +136,7 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
 
             // Calculate next part of number
             num += (roll - 1) * scale_factor;
-            
+
             // Increment counter
             count += 1;
         }
