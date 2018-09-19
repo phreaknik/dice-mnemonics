@@ -1,7 +1,9 @@
 #[macro_use]
 extern crate clap;
+extern crate crc;
 
 use clap::{App, Arg};
+use crc::crc32;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use std::process;
@@ -48,6 +50,10 @@ fn main() {
 }
 
 fn generate_mnemonic_monero(dict_file: &str) -> () {
+    const DICT_SIZE: usize = 1626;
+    let mut word_indices: Vec<usize> = Vec::new();
+    let mut trimmed_words = String::new();
+
     // Open the dictionary file for reading
     let f = File::open(dict_file).unwrap_or_else(|err| {
         println!("error: {}", err);
@@ -59,10 +65,10 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
         .lines()
         .map(|l| l.expect("Could not parse line"))
         .collect();
-    let dict_size = dictionary.len() - 1;
+    assert_eq!(dictionary.len(), 1626);
 
     // Calculate minimum # of rolls to preserve the most entropy
-    let mut rem = dict_size;
+    let mut rem = DICT_SIZE;
     let mut min_rolls = 0;
     loop {
         rem = rem / DICE_SIDES;
@@ -71,7 +77,7 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
             break;
         }
 
-        min_rolls = min_rolls + 1;
+        min_rolls += 1;
     }
 
     // Get dice rolls from user and return dictionary word
@@ -80,68 +86,91 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
     println!(
         "Use at least {} rolls to preserve {}% entropy.",
         min_rolls,
-        100 * DICE_SIDES.pow(min_rolls) / dict_size
+        100 * DICE_SIDES.pow(min_rolls as u32) / DICT_SIZE
     );
-    for i in 1..24 {
-        print!("({}/25) ", i);
-        let input = prompt_user("")
-            .unwrap_or_else(|err| {
-                println!("error: {}", err);
-                process::exit(1);
-            }).to_string();
 
-        // Check for quit signal
-        match input.as_ref() {
-            "q" | "Q" | "quit" => break,
-            _ => (),
-        }
+    // Get first 24 words
+    let mut current_word = 1;
+    loop {
+        // Prompt user to enter dice rolls
+        let mut rolls: Vec<usize> = Vec::new();
+        print!("({}/24)\t", current_word);
+        if let Ok(input) = prompt_user("") {
+            match &input as &str {
+                // Detect quit command
+                "q" | "Q" => process::exit(0),
 
-        // Make sure we have enough rolls to preserve maximum entropy
-        let rolls: Vec<char> = input.chars().collect();
-        if (rolls.len() as u32) < min_rolls {
-            println!(
-                "error: roll at least {} dice to preserve entropy",
-                min_rolls
-            );
+                // Convert input to vector of numbers
+                _ => {
+                    rolls = input
+                        .chars()
+                        .map(|c| c.to_string().parse().expect("not a number"))
+                        .collect()
+                }
+            }
+        } else {
+            println!("error: invalid input");
             continue;
         }
 
         // Loop for each roll to calculate large number
         let mut num = 0;
-        let mut count = 0;
-        for x in rolls {
-            count = count + 1;
-
+        let mut count = 1;
+        for roll in rolls {
             // Calculate scale factor for this roll
-            let scale_factor = dict_size / DICE_SIDES.pow(count);
+            let scale_factor = DICT_SIZE / DICE_SIDES.pow(count);
 
             // Break if we have seen enough rolls
             if scale_factor <= 0 {
                 break;
             }
 
-            // Convert roll from char to number
-            let roll: usize = x.to_string().parse().expect("not a number");
-
             // Check this is a valid roll
             if roll > DICE_SIDES || roll < 1 {
                 println!(
-                    "Error: invalid die roll: {}. Must be a number between 1-6",
-                    roll
+                    "error: invalid die roll: {}. Rolls must be between between 1-{}",
+                    roll, DICE_SIDES
                 );
                 break;
             }
 
             // Calculate next part of number
-            num = num + (roll - 1) * scale_factor;
+            num += (roll - 1) * scale_factor;
+
+            // Increment counter
+            count += 1;
         }
 
-        // Print dictionary word corresponding to the large number
-        if num > dict_size {
-            println!("error: dictionary overflow");
-            process::exit(1);
+        // Make sure all 4 rolls were summed
+        if count < 5 {
+            // Skip this word, since less than 4 dice were used
+            println!(
+                "error: roll at least {} valid dice to preserve entropy",
+                min_rolls
+            );
+            continue;
         }
-        println!("{}", dictionary[num]);
+
+        // Look up dictionary word and add to phrase
+        word_indices.push(num);
+        trimmed_words.push_str(&dictionary[num as usize][0..3]);
+
+        // Check if we have 24 words yet
+        current_word += 1;
+        if current_word > 24 {
+            break;
+        }
+    }
+
+    // Calculate checksum word
+    let checksum = (crc32::checksum_ieee(trimmed_words.as_bytes()) as usize) % word_indices.len();
+    word_indices.push(checksum);
+
+    // Print phrase
+    let mut idx = 1;
+    for w in word_indices {
+        println!("{}:\t{}", idx, dictionary[w as usize]);
+        idx += 1;
     }
 }
 
