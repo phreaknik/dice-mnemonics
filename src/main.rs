@@ -9,7 +9,7 @@ use std::process;
 use std::vec::Vec;
 use crc::crc32;
 
-const DICE_SIDES: u32 = 6;
+const DICE_SIDES: usize = 6;
 
 fn main() {
     let arg_matches = App::new(crate_name!())
@@ -50,8 +50,8 @@ fn main() {
 }
 
 fn generate_mnemonic_monero(dict_file: &str) -> () {
-    const DICT_SIZE: u32 = 1626;
-    let mut word_indices: Vec<u32> = Vec::new();
+    const DICT_SIZE: usize = 1626;
+    let mut word_indices: Vec<usize> = Vec::new();
     let mut trimmed_words = String::new();
 
     // Open the dictionary file for reading
@@ -71,7 +71,7 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
     let mut rem = DICT_SIZE;
     let mut min_rolls = 0;
     loop {
-        rem = rem / DICE_SIDES as u32;
+        rem = rem / DICE_SIDES;
 
         if rem <= 0 {
             break;
@@ -86,7 +86,7 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
     println!(
         "Use at least {} rolls to preserve {}% entropy.",
         min_rolls,
-        100 * DICE_SIDES.pow(min_rolls) / DICT_SIZE
+        100 * DICE_SIDES.pow(min_rolls as u32) / DICT_SIZE
     );
 
     // Get first 24 words
@@ -107,7 +107,7 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
 
         // Make sure we have enough rolls to preserve maximum entropy
         let rolls: Vec<char> = input.chars().collect();
-        if (rolls.len() as u32) < min_rolls {
+        if rolls.len() < min_rolls {
             println!(
                 "error: roll at least {} dice to preserve entropy",
                 min_rolls
@@ -128,7 +128,7 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
             }
 
             // Convert roll from char to number
-            let roll: u32 = x.to_string().parse().expect("not a number");
+            let roll: usize = x.to_string().parse().expect("not a number");
 
             // Check this is a valid roll
             if roll > DICE_SIDES || roll < 1 {
@@ -164,7 +164,7 @@ fn generate_mnemonic_monero(dict_file: &str) -> () {
     }
 
     // Calculate checksum word
-    let checksum = crc32::checksum_ieee(trimmed_words.as_bytes()) % word_indices.len() as u32;
+    let checksum = (crc32::checksum_ieee(trimmed_words.as_bytes()) as usize) % word_indices.len();
     word_indices.push(checksum);
 
     // Print phrase
