@@ -1,12 +1,9 @@
-extern crate rand;
-
 use clap::ArgMatches;
 use crc::crc32;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use std::process;
 use std::vec::Vec;
-use self::rand::Rng;
 
 const DICE_SIDES: usize = 6;
 const NUM_ROLLS: usize = 4;
@@ -38,10 +35,7 @@ pub fn run(args: Option<&ArgMatches>) -> () {
     println!("Enter {} dice rolls (without spaces), to generate a seed words.", NUM_ROLLS);
     println!("Enter 'q' or 'quit' to exit");
     println!("\n");
-
-    // Initialize RNG
-    let mut rng = rand::thread_rng();
-
+    
     // Get first 24 words
     let mut current_word = 1;
     loop {
@@ -103,25 +97,6 @@ pub fn run(args: Option<&ArgMatches>) -> () {
             );
             continue;
         }
-
-
-        // Since 4 dice rolls can only generate 6^4 = 1296 random numbers, it does
-        // not span our entire dictionary size of 1626. Therefore dice rolls alone
-        // result in 20% less entropy, than if the entire dictionary was used.
-        // To improve on this, lets generate a random offset using the computer RNG
-        // to help us span the entire dictionary range. This can increase our
-        // entropy to nearly 100% of achievable entropy with this dictionary,
-        // depending on the quality of your computer's RNG.
-        //
-        // Note: Even if the computer RNG is compromised/flawed and provides 0 bits
-        // of added entropy, ~80% entropy will still be preserved through the dice
-        // rolls alone.
-
-        // Generate random offset for this round
-        let offset = rng.gen_range(0, DICT_SIZE - DICE_SIDES.pow(NUM_ROLLS as u32));
-
-        // Add random offset to large number
-        num += offset;
 
         // Look up dictionary word and add to phrase
         word_indices.push(num);
