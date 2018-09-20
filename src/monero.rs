@@ -34,8 +34,10 @@ pub fn run(args: Option<&ArgMatches>) -> () {
     assert_eq!(dictionary.len(), DICT_SIZE);
 
     // Get dice rolls from user and return dictionary word
-    println!("Enter 'q' or 'quit' to exit");
+    println!("Monero seed phrase generator.");
     println!("Enter {} dice rolls (without spaces), to generate a seed words.", NUM_ROLLS);
+    println!("Enter 'q' or 'quit' to exit");
+    println!("\n");
 
     // Initialize RNG
     let mut rng = rand::thread_rng();
@@ -139,9 +141,9 @@ pub fn run(args: Option<&ArgMatches>) -> () {
 
     // Print phrase
         println!("\n\n\n");
-        println!("====================================================");
-        println!("\t\tMonero Seed Phrase");
-        println!("====================================================");
+    println!("===============================================================");
+        println!("\t\t\tMonero Seed Phrase");
+    println!("===============================================================");
     let mut idx = 1;
     for w in word_indices {
         println!("{}:\t{}", idx, dictionary[w as usize]);

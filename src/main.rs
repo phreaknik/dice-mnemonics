@@ -6,6 +6,13 @@ use clap::{App, AppSettings, Arg, SubCommand};
 
 mod monero;
 
+const BANNER: &str = "______ _____ _____ ___________ _   _______  ___  _____ _____
+|  _  \\_   _/  __ \\  ___| ___ \\ | | | ___ \\/ _ \\/  ___|  ___|
+| | | | | | | /  \\/ |__ | |_/ / |_| | |_/ / /_\\ \\ `--.| |__  
+| | | | | | | |   |  __||  __/|  _  |    /|  _  |`--. \\  __| 
+| |/ / _| |_| \\__/\\ |___| |   | | | | |\\ \\| | | /\\__/ / |___ 
+|___/  \\___/ \\____|____/\\_|   \\_| |_|_| \\_\\_| |_|____/\\____/";
+
 fn main() {
     // Setup command-line interface (CLI)
     let arg_matches = App::new(crate_name!())
@@ -31,6 +38,12 @@ fn main() {
                         .takes_value(true),
                 ),
         ).get_matches();
+
+    // Print banner
+    println!("\n\n\n");
+    println!("===============================================================");
+    println!("\n{}\n", BANNER);
+    println!("===============================================================");
 
     // Determine which subcommand was chosen
     match arg_matches.subcommand_name() {
