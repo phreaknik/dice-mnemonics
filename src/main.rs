@@ -44,6 +44,8 @@ fn main() {
     println!("===============================================================");
     println!("\n{}\n", BANNER);
     println!("===============================================================");
+    println!("");
+    println!("Mode: {}", arg_matches.subcommand_name().unwrap());
 
     // Determine which subcommand was chosen
     match arg_matches.subcommand_name() {

@@ -31,7 +31,6 @@ pub fn run(args: Option<&ArgMatches>) -> () {
     assert_eq!(dictionary.len(), DICT_SIZE);
 
     // Get dice rolls from user and return dictionary word
-    println!("Monero seed phrase generator.");
     println!("Enter {} dice rolls (without spaces), to generate a seed words.", NUM_ROLLS);
     println!("Enter 'q' or 'quit' to exit");
     println!("\n");
