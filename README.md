@@ -1,25 +1,31 @@
-# dice-nmeonics
+# dicephrase
 A simple tool to help generate a mnemonic seed phrase using dice rolls as a source of entropy.
 
-This program is written in Rust and assumes you have Rust tools installed. If not, please see Rust installation instructions here: https://www.rust-lang.org/install.html
+## Rust Dependencies
+* Rust build tools
+
+Install Rust build tools if you have not already (More info about Rust installation: https://www.rust-lang.org/en-US/install.html)
+```
+curl https://sh.rustup.rs -sSf | sh
+```
 
 ## Build instructions
 ```
-git clone git@github.com:phreaknik/dice-mnemonics.git
-cd dice-mnemonics
+git clone git@github.com:phreaknik/dicephrase.git
+cd dicephrase
 cargo build
 ```
 
 ## Usage instructions
 ```
-./target/debug/dice-mnemonic help
+./target/debug/dicephrase help
 ```
 or
 ```
-./target/debug/dice-mnemonic help [SUBCOMMAND]
+./target/debug/dicephrase help [SUBCOMMAND]
 ```
 
 ## Example (Monero english dictionary)
 ```
-./target/debug/dice-mnemonics monero
+./target/debug/dicephrase monero
 ```
