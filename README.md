@@ -10,7 +10,16 @@ cd dice-mnemonics
 cargo build
 ```
 
-## Usage example (Monero english dictionary)
+## Usage instructions
 ```
-./target/debug/dice-mnemonics -d dictionaries/monero-english.txt
+./target/debug/dice-mnemonic help
+```
+or
+```
+./target/debug/dice-mnemonic help [SUBCOMMAND]
+```
+
+## Example (Monero english dictionary)
+```
+./target/debug/dice-mnemonics monero
 ```
