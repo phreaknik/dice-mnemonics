@@ -2,7 +2,7 @@
 extern crate clap;
 extern crate crc;
 
-use clap::{App, Arg};
+use clap::{App, AppSettings, Arg, SubCommand};
 use crc::crc32;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
@@ -12,18 +12,14 @@ use std::vec::Vec;
 const DICE_SIDES: usize = 6;
 
 fn main() {
-    let arg_matches = App::new(crate_name!())
+    // Setup command-line interface (CLI)
+    let cli_args = App::new(crate_name!())
         .version(crate_version!())
         .author(crate_authors!())
         .about(crate_description!())
-        .arg(
-            Arg::with_name("type")
-                .short("t")
-                .long("type")
-                .value_name("MNEMONIC_TYPE")
-                .help("What type of mnemonic phrase are you generating? Eg. 'monero-english'")
-                .takes_value(true)
-                .required(true),
+        .setting(AppSettings::ArgRequiredElseHelp)
+        .subcommand(
+            SubCommand::with_name("monero").about("Generate Monero style mnemonic seed phrase."),
         ).arg(
             Arg::with_name("dictionary")
                 .short("d")
@@ -33,18 +29,18 @@ fn main() {
                 .takes_value(true),
         ).get_matches();
 
-    // Which type of mnemonic phrase are we generating?
-    match arg_matches.value_of("type").unwrap() {
-        "monero-english" => {
-            if let Some(dict_file) = arg_matches.value_of("dictionary") {
+    // Determine which subcommand was chosen
+    match cli_args.subcommand_name() {
+        Some("monero") => {
+            if let Some(dict_file) = cli_args.value_of("dictionary") {
                 generate_mnemonic_monero(&dict_file);
             } else {
                 generate_mnemonic_monero("dictionaries/monero-english.txt");
             }
         }
         _ => {
-            println!("error: unable to determine mnemonic dictionary to use.");
-            process::exit(1);
+            println!("error: No subcommand provided.");
+            println!("Run 'rusty-math -h' for a list of available commands.");
         }
     }
 }
