@@ -9,6 +9,7 @@ const DICE_SIDES: usize = 6;
 const NUM_ROLLS: usize = 4;
 const DICT_SIZE: usize = 1626;
 const DEFAULT_DICTIONARY: &str = "dictionaries/monero-english.txt";
+const DICTIONARY_OFFSET: usize = 13;
 
 pub fn run(args: Option<&ArgMatches>) -> () {
     let mut word_indices: Vec<usize> = Vec::new();
@@ -31,7 +32,7 @@ pub fn run(args: Option<&ArgMatches>) -> () {
     assert_eq!(dictionary.len(), DICT_SIZE);
 
     // Get dice rolls from user and return dictionary word
-    println!("Enter {} dice rolls (without spaces), to generate a seed words.", NUM_ROLLS);
+    println!("Enter {} dice rolls (without spaces), to generate each seed word.", NUM_ROLLS);
     println!("Enter 'q' or 'quit' to exit");
     println!("\n");
     
@@ -97,6 +98,11 @@ pub fn run(args: Option<&ArgMatches>) -> () {
             continue;
         }
 
+        // Add an offset to our dictionary lookup. This helps differentiate
+        // the word set this algorithm spans from the word-set other offline
+        // mnemonic phrase generators may span.
+        num += DICTIONARY_OFFSET;
+        
         // Look up dictionary word and add to phrase
         word_indices.push(num);
         trimmed_words.push_str(&dictionary[num as usize][0..3]);
