@@ -6,6 +6,7 @@ use std::process;
 use std::vec::Vec;
 
 const DICE_SIDES: usize = 6;
+const NUM_ROLLS: usize = 4;
 const DICT_SIZE: usize = 1626;
 const DEFAULT_DICTIONARY: &str = "dictionaries/monero-english.txt";
 
@@ -27,29 +28,11 @@ pub fn run(args: Option<&ArgMatches>) -> () {
         .lines()
         .map(|l| l.expect("Could not parse line"))
         .collect();
-    assert_eq!(dictionary.len(), 1626);
-
-    // Calculate minimum # of rolls to preserve the most entropy
-    let mut rem = DICT_SIZE;
-    let mut min_rolls = 0;
-    loop {
-        rem = rem / DICE_SIDES;
-
-        if rem <= 0 {
-            break;
-        }
-
-        min_rolls += 1;
-    }
+    assert_eq!(dictionary.len(), DICT_SIZE);
 
     // Get dice rolls from user and return dictionary word
     println!("Enter 'q' or 'quit' to exit");
-    println!("Enter dice rolls (without spaces), to generate a seed words.");
-    println!(
-        "Use at least {} rolls to preserve {}% entropy.",
-        min_rolls,
-        100 * DICE_SIDES.pow(min_rolls as u32) / DICT_SIZE
-    );
+    println!("Enter {} dice rolls (without spaces), to generate a seed words.", NUM_ROLLS);
 
     // Get first 24 words
     let mut current_word = 1;
@@ -77,10 +60,10 @@ pub fn run(args: Option<&ArgMatches>) -> () {
 
         // Loop for each roll to calculate large number
         let mut num = 0;
-        let mut count = 1;
+        let mut count = 0;
         for roll in rolls {
             // Calculate scale factor for this roll
-            let scale_factor = DICT_SIZE / DICE_SIDES.pow(count);
+            let scale_factor = DICT_SIZE / DICE_SIDES.pow(count + 1);
 
             // Break if we have seen enough rolls
             if scale_factor <= 0 {
@@ -104,11 +87,11 @@ pub fn run(args: Option<&ArgMatches>) -> () {
         }
 
         // Make sure all 4 rolls were summed
-        if count < 5 {
+        if count < NUM_ROLLS as u32 {
             // Skip this word, since less than 4 dice were used
             println!(
                 "error: roll at least {} valid dice to preserve entropy",
-                min_rolls
+                NUM_ROLLS
             );
             continue;
         }
