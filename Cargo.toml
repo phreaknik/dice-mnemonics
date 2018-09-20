@@ -7,3 +7,4 @@ version = "0.1.0"
 [dependencies]
 clap = "2.32"
 crc = "1.8"
+rand = "0.5.5"
