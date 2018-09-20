@@ -138,6 +138,10 @@ pub fn run(args: Option<&ArgMatches>) -> () {
     word_indices.push(checkword_idx);
 
     // Print phrase
+        println!("\n\n\n");
+        println!("====================================================");
+        println!("\t\tMonero Seed Phrase");
+        println!("====================================================");
     let mut idx = 1;
     for w in word_indices {
         println!("{}:\t{}", idx, dictionary[w as usize]);
