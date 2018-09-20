@@ -1,6 +1,6 @@
 [package]
 authors = ["John Boyd <johnboydiv@gmail.com>"]
-name = "dice-mnemonics"
+name = "dicephrase"
 description = "Generate a mnemonic phrase using dice rolls."
 version = "0.1.0"
 
